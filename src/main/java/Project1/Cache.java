@@ -15,8 +15,7 @@ public class Cache {
     private int numRead = 0;
     private int numWrite = 0;
 
-    private HashMap<Integer, Set<Integer>> LRU;
-    private HashMap<Integer, Set<Integer>> MRU;
+    private HashMap<Integer, ArrayList<Integer>> LRU;
 
     private final HashMap<Integer, HashMap<Integer, Block>> cache;
 
@@ -30,14 +29,12 @@ public class Cache {
             HashMap<Integer, Block> set = new HashMap<>();
             // Create LRUs for each sets
             LRU = new HashMap<>();
-            MRU = new HashMap<>();
             for(int j = 0; j < numSets; j++) {
                 // Populate the LRUs, initialize by adding all numbers less than "assoc"
-                Set<Integer> listLRU = initializeList();
-                // Create an empty list for MRU
-                Set<Integer> listMRU = new HashSet<>();
+                ArrayList<Integer> listLRU = initializeList();
+
                 LRU.put(j, listLRU);
-                MRU.put(j, listMRU);
+
 
                 // Populate the blocks for each sets
                 Block block = new Block(0, 0, null);
@@ -75,15 +72,18 @@ public class Cache {
             // If a hit is found
             if (valid == 1 && tagStored.equals(tag)) {
                 // Get the LRU and MRU for the corresponding sets
-                Set<Integer> listLRU = LRU.get(setDecimal);
-                Set<Integer> listMRU = MRU.get(setDecimal);
+                ArrayList<Integer> listLRU = LRU.get(setDecimal);
 
-                // If the LRU list is empty, re-initialize it again using the MRU data
-                if (listLRU.isEmpty())
-                    listLRU = copyFromMRU(setDecimal, listMRU);
+                /*
+                System.out.println("\nBEFORE");
+                System.out.println("Hit at way " + i);
+                System.out.println(listLRU);
 
-                listLRU.remove(i);  // Remove the specific index where we find the hit from LRU
-                listMRU.add(i); // And add that index to the MRU
+                 */
+
+                int index = findIndex(listLRU, i);
+                listLRU.remove(index);
+                listLRU.add(i);
 
                 // Only applies if it's a write-back
                 if(!isWriteThru) {
@@ -93,26 +93,21 @@ public class Cache {
                        block.setDirty(1); // If it's write, set dirty to 1
                 }
 
+
                 block.setValid(1); // Then set it to valid
 
                 // Update the hashmap
                 LRU.put(setDecimal, listLRU);
-                MRU.put(setDecimal, listMRU);
 
                 /*
-                // ~ D E B U G G I N G ~
-                System.out.println();
-                System.out.println(listMRU);
-                System.out.println(listLRU);
+                System.out.println("AFTER");
                 System.out.println("Hit at way " + i);
-                System.out.println("(HIT) -> Index = " + setDecimal + " Tag = " + tag + " TagStored = " + tagStored);
-                // ~ D E B U G G I N G ~
+                System.out.println(listLRU);
 
                  */
 
                 // Increase the hits and the memory reads
                 numHits++;
-                numRead++;
                 return true;
             }
         }
@@ -120,7 +115,6 @@ public class Cache {
     }
 
     private void miss (int setDecimal, String tag, boolean isRead) {
-        numMiss++;  // Increment the miss tracker
         int wayNumber = findLRU(setDecimal);    // Locate a block to use
 
         // Get the block information
@@ -129,7 +123,7 @@ public class Cache {
 
         // If there is no data stored or the date stored is not the same
         if ((block.getValid() == 0 && block.getDirty() == 0) || (block.getValid() == 1 && block.getDirty() == 0 && !tagStored.equals(tag))){
-            block.setValid(1);  // Set valid to 1
+            block.setValid(1);  // HashSet valid to 1
             block.setTag(tag);  // Replace the tag
 
             if(isRead)
@@ -137,13 +131,13 @@ public class Cache {
             else
                 block.setDirty(1); // If it's write, set dirty to 1
 
+            // Update the trackers
+            numMiss++;
             numRead++;
-
-            //System.out.println("(MISS) -> Index = " + setDecimal + " Tag = " + tag + " TagStored = " + tagStored);
         }
         // Different data in same index with dirty bit 1 (Write-back)
         else if (block.getValid() == 1 && block.getDirty() == 1 && !tagStored.equals(tag)) {
-            block.setValid(1);  // Set valid to 1
+            block.setValid(1);  // HashSet valid to 1
             block.setTag(tag);  // Replace the tag
 
             if(isRead)
@@ -152,20 +146,17 @@ public class Cache {
                 block.setDirty(1); // If it's write, set dirty to 1
 
             numWrite++;
-
-            //System.out.println("(MISS - replaced - writeBACK) -> Index = " + setDecimal + " Tag = " + tag + " TagStored = " + tagStored);
         }
     }
 
     public void writeThrough (int setDecimal, String tag, String operationType) {
-        boolean flag = isHit(setDecimal, tag, true, true);   // Check if it's a hit
+        // Update the trackers accordingly
+        if (operationType.equals("W")) numWrite++;
 
+        boolean flag = isHit(setDecimal, tag, true, true);   // Check if it's a hit
         // If it is not a hit, perform the miss operation
         if (!flag) {
-            // Update the trackers accordingly
-            if (operationType.equals("R")) numRead++;
-            else numWrite++;
-
+            numRead++;
             numMiss++;
 
             int wayNumber = findLRU(setDecimal);    // Locate a block to use
@@ -175,64 +166,60 @@ public class Cache {
 
             // If there is no data stored or if the data is valid but the tags are not the same
             if (block.getValid() == 0 || (block.getValid() == 1 && !tagStored.equals(tag))){
-                block.setValid(1);  // Set valid to 1
+                block.setValid(1);  // HashSet valid to 1
                 block.setTag(tag);  // Update/replace the tag
-
-                //System.out.println("(MISS) -> Index = " + setDecimal + " Tag = " + tag + " TagStored = " + tagStored);
             }
         }
     }
 
-    private Set<Integer> initializeList() {
-        Set<Integer> list = new HashSet<>();
+    private ArrayList<Integer> initializeList() {
+        ArrayList<Integer> list = new ArrayList<>();
         for (int i = 0; i < assoc; i++) {
             list.add(i);
         }
         return list;
     }
 
-    private Set<Integer> copyFromMRU(int setDecimal, Set<Integer> listMRU) {
+    private ArrayList<Integer> copyFromMRU(int setDecimal, ArrayList<Integer> listMRU) {
         // Copy the MRU list to LRU
-        Set<Integer> listLRU = new HashSet<>(listMRU);
+        ArrayList<Integer> listLRU = new ArrayList<>();
         LRU.put(setDecimal, listLRU);
 
-        // Clear the MRU list
-        listMRU.clear();
-        MRU.put(setDecimal, listMRU);
 
         return listLRU;
     }
 
     private int findLRU (int setDecimal) {
-        Set<Integer> listLRU = LRU.get(setDecimal);
-        Set<Integer> listMRU = MRU.get(setDecimal);
-
-        // If the LRU list is empty, re-initialize it again by copying the data from MRU
-        if (listLRU.isEmpty())
-            listLRU = copyFromMRU(setDecimal, listMRU);
+        ArrayList<Integer> listLRU = LRU.get(setDecimal);
 
         // Get the first available number from the LRU
-        Integer wayNumber = listLRU.stream().findFirst().get();
+        Integer wayNumber = listLRU.get(0);
         // Remove that element from the list, then update the LRU
         listLRU.remove(wayNumber);
+        listLRU.add(wayNumber);
+
         LRU.put(setDecimal, listLRU);
 
-        // Add the number that we removed from LRU to MRU, then update the MRU
-        listMRU.add(wayNumber);
-        MRU.put(setDecimal, listMRU);
-
         /*
-        // ~ D E B U G G I N G ~
         System.out.println();
-        System.out.println(listMRU);
         System.out.println(listLRU);
-        System.out.println("LRU NUMBER " + wayNumber);
-        // ~ D E B U G G I N G ~
 
          */
 
         return wayNumber;
     }
+
+    private int findIndex (ArrayList<Integer> listLRU, int wayNumber){
+        for (int i = 0; i < listLRU.size(); i++) {
+            // FOUND
+            if (listLRU.get(i) == wayNumber) {
+                return i;
+            }
+        }
+        // NOT FOUND
+        return -1;
+    }
+
 
     public int getNumWrite() {
         return numWrite;

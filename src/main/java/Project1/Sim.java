@@ -27,15 +27,6 @@ public class Sim {
         int WB = Integer.parseInt(arguments[4]);
         String traceFile = arguments[5];
 
-        /*
-        int cacheSize = 32768;
-        int assoc = 8;
-        int blockSize = 64; // BLOCK_SIZE is 64 by default
-        int replacement = 0;
-        int WB = 0;
-        String traceFile = "src/main/java/Project1/TraceFiles/XSBENCH.t";
-         */
-
         // Determine the offset bits, number of sets and the set bits
         int offsetBits = log2(blockSize);
         int numSets = cacheSize / (blockSize * assoc);
@@ -110,7 +101,7 @@ public class Sim {
 
             }
         } catch (IOException e) {
-            System.out.println(e);
+            System.out.println("File not found");
         }
 
         printResults(replacement, cacheFIFO, cache);

@@ -66,9 +66,6 @@ public class CacheFIFO {
                 // Get the instance of the list
                 List<Integer> listFIFO = FIFO.get(setDecimal);
 
-                //System.out.println();
-                //System.out.println("BEFORE = " + listFIFO);
-
                 // Update the list by removing the first element then putting it to the back
                 Integer x = i;
                 listFIFO.remove(x);
@@ -85,15 +82,6 @@ public class CacheFIFO {
                 }
 
                 block.setValid(1); // Then set it to valid
-
-                /*
-                // ~ D E B U G G I N G ~
-                System.out.println("AFTER = " + listFIFO);
-                System.out.println("Hit at way " + i);
-                System.out.println("(HIT) -> Index = " + setDecimal + " Tag = " + tag + " TagStored = " + tagStored);
-                // ~ D E B U G G I N G ~
-
-                 */
 
                 // Increase the hits and the memory reads
                 numHits++;
@@ -123,8 +111,6 @@ public class CacheFIFO {
                 block.setDirty(1); // If it's write, set dirty to 1
 
             numRead++;
-
-            //System.out.println("(MISS) -> Index = " + setDecimal + " Tag = " + tag + " TagStored = " + tagStored);
         }
         // Different data in same index with dirty bit 1
         else if (block.getValid() == 1 && block.getDirty() == 1 && !tagStored.equals(tag)) {
@@ -137,8 +123,6 @@ public class CacheFIFO {
                 block.setDirty(1); // If it's write, set dirty to 1
 
             numWrite++;
-
-            //System.out.println("(MISS - replaced - writeBACK) -> Index = " + setDecimal + " Tag = " + tag + " TagStored = " + tagStored);
         }
     }
 
@@ -178,8 +162,6 @@ public class CacheFIFO {
             if (block.getValid() == 0 || (block.getValid() == 1 && !tagStored.equals(tag))){
                 block.setValid(1);  // Set valid to 1
                 block.setTag(tag);  // Update/replace the tag
-
-                //System.out.println("(MISS) -> Index = " + setDecimal + " Tag = " + tag + " TagStored = " + tagStored);
             }
         }
     }
@@ -187,17 +169,12 @@ public class CacheFIFO {
     private int findFIFO (int setDecimal) {
         List<Integer> listFIFO = FIFO.get(setDecimal);
 
-        //System.out.println();
-        //System.out.println("BEFORE = " + listFIFO);
-
         // Get the first available LRU
         int wayNumber = listFIFO.get(0);
         // Then remove it from the list
         listFIFO.remove(0);
         // Put it to the back of the list
         listFIFO.add(wayNumber);
-
-        //System.out.println("AFTER = " + listFIFO);
 
         return wayNumber;
     }
