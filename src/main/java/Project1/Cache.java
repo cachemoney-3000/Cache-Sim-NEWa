@@ -115,6 +115,8 @@ public class Cache {
     }
 
     private void miss (int setDecimal, String tag, boolean isRead) {
+        numRead++;
+        numMiss++;
         int wayNumber = findLRU(setDecimal);    // Locate a block to use
 
         // Get the block information
@@ -123,7 +125,7 @@ public class Cache {
 
         // If there is no data stored or the date stored is not the same
         if ((block.getValid() == 0 && block.getDirty() == 0) || (block.getValid() == 1 && block.getDirty() == 0 && !tagStored.equals(tag))){
-            block.setValid(1);  // HashSet valid to 1
+            block.setValid(1);  // Set valid to 1
             block.setTag(tag);  // Replace the tag
 
             if(isRead)
@@ -131,22 +133,23 @@ public class Cache {
             else
                 block.setDirty(1); // If it's write, set dirty to 1
 
-            // Update the trackers
-            numMiss++;
-            numRead++;
+
         }
         // Different data in same index with dirty bit 1 (Write-back)
         else if (block.getValid() == 1 && block.getDirty() == 1 && !tagStored.equals(tag)) {
-            block.setValid(1);  // HashSet valid to 1
+            block.setValid(1);  // Set valid to 1
             block.setTag(tag);  // Replace the tag
 
-            if(isRead)
+            if(isRead){
                 block.setDirty(0);  // If the operation is read, set dirty to 0
+            }
             else
                 block.setDirty(1); // If it's write, set dirty to 1
 
             numWrite++;
         }
+
+
     }
 
     public void writeThrough (int setDecimal, String tag, String operationType) {
@@ -180,14 +183,6 @@ public class Cache {
         return list;
     }
 
-    private ArrayList<Integer> copyFromMRU(int setDecimal, ArrayList<Integer> listMRU) {
-        // Copy the MRU list to LRU
-        ArrayList<Integer> listLRU = new ArrayList<>();
-        LRU.put(setDecimal, listLRU);
-
-
-        return listLRU;
-    }
 
     private int findLRU (int setDecimal) {
         ArrayList<Integer> listLRU = LRU.get(setDecimal);

@@ -83,9 +83,8 @@ public class CacheFIFO {
 
                 block.setValid(1); // Then set it to valid
 
-                // Increase the hits and the memory reads
+                // Increase the hits
                 numHits++;
-                numRead++;
                 return true;
             }
         }
@@ -94,6 +93,7 @@ public class CacheFIFO {
 
     private void miss (int setDecimal, String tag, boolean isRead) {
         numMiss++;  // Increment the miss tracker
+        numRead++;
         int wayNumber = findFIFO(setDecimal);   // Locate a block to use
 
         // Get the block information
@@ -110,7 +110,6 @@ public class CacheFIFO {
             else
                 block.setDirty(1); // If it's write, set dirty to 1
 
-            numRead++;
         }
         // Different data in same index with dirty bit 1
         else if (block.getValid() == 1 && block.getDirty() == 1 && !tagStored.equals(tag)) {
@@ -143,14 +142,14 @@ public class CacheFIFO {
     }
 
     public void writeThrough (int setDecimal, String tag, String operationType) {
+        // Update the trackers accordingly
+        if (operationType.equals("W")) numWrite++;
+
         boolean flag = isHit(setDecimal, tag, true, true);   // Check if it's a hit
 
         // If it is not a hit, perform the miss operation
         if (!flag) {
-            // Update the trackers accordingly
-            if (operationType.equals("R")) numRead++;
-            else numWrite++;
-
+            numRead++;
             numMiss++;
 
             int wayNumber = findFIFO(setDecimal);    // Locate a block to use
