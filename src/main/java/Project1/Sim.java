@@ -113,6 +113,7 @@ public class Sim {
         // Write-through
         if (WB == 0) {
             cache.writeThrough(adr.getSetDecimal(), adr.getTagHex(), operationType);
+
         }
         // Write-back
         else {

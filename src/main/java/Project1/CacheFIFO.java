@@ -75,8 +75,10 @@ public class CacheFIFO {
 
                 // Only applies if it's a write-back
                 if(!isWriteThru) {
-                    if(isRead)
+                    if(isRead) {
                         block.setDirty(0);  // If the operation is read, set dirty to 0
+                        numWrite++;
+                    }
                     else
                         block.setDirty(1); // If it's write, set dirty to 1
                 }

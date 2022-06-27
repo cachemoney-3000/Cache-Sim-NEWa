@@ -78,8 +78,8 @@ public class Cache {
                 System.out.println("\nBEFORE");
                 System.out.println("Hit at way " + i);
                 System.out.println(listLRU);
-
                  */
+                System.out.println("HIT " + tag + " " + setDecimal);
 
                 int index = findIndex(listLRU, i);
                 listLRU.remove(index);
@@ -119,6 +119,8 @@ public class Cache {
         numMiss++;
         int wayNumber = findLRU(setDecimal);    // Locate a block to use
 
+        System.out.println("MISS " + tag + " " + setDecimal);
+
         // Get the block information
         Block block = cache.get(wayNumber).get(setDecimal);
         String tagStored = block.getTag();
@@ -142,11 +144,13 @@ public class Cache {
 
             if(isRead){
                 block.setDirty(0);  // If the operation is read, set dirty to 0
+                numWrite++;
+                System.out.println("READ " + tag + " " + setDecimal);
             }
             else
                 block.setDirty(1); // If it's write, set dirty to 1
 
-            numWrite++;
+
         }
 
 
@@ -159,6 +163,7 @@ public class Cache {
         boolean flag = isHit(setDecimal, tag, true, true);   // Check if it's a hit
         // If it is not a hit, perform the miss operation
         if (!flag) {
+            System.out.println("READ " + tag);
             numRead++;
             numMiss++;
 
