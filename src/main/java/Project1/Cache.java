@@ -74,13 +74,6 @@ public class Cache {
                 // Get the LRU and MRU for the corresponding sets
                 ArrayList<Integer> listLRU = LRU.get(setDecimal);
 
-                /*
-                System.out.println("\nBEFORE");
-                System.out.println("Hit at way " + i);
-                System.out.println(listLRU);
-                 */
-                System.out.println("HIT " + tag + " " + setDecimal);
-
                 int index = findIndex(listLRU, i);
                 listLRU.remove(index);
                 listLRU.add(i);
@@ -93,18 +86,10 @@ public class Cache {
                        block.setDirty(1); // If it's write, set dirty to 1
                 }
 
-
                 block.setValid(1); // Then set it to valid
-
                 // Update the hashmap
                 LRU.put(setDecimal, listLRU);
 
-                /*
-                System.out.println("AFTER");
-                System.out.println("Hit at way " + i);
-                System.out.println(listLRU);
-
-                 */
 
                 // Increase the hits and the memory reads
                 numHits++;
@@ -118,8 +103,6 @@ public class Cache {
         numRead++;
         numMiss++;
         int wayNumber = findLRU(setDecimal);    // Locate a block to use
-
-        System.out.println("MISS " + tag + " " + setDecimal);
 
         // Get the block information
         Block block = cache.get(wayNumber).get(setDecimal);
@@ -145,7 +128,6 @@ public class Cache {
             if(isRead){
                 block.setDirty(0);  // If the operation is read, set dirty to 0
                 numWrite++;
-                System.out.println("READ " + tag + " " + setDecimal);
             }
             else
                 block.setDirty(1); // If it's write, set dirty to 1
@@ -163,7 +145,6 @@ public class Cache {
         boolean flag = isHit(setDecimal, tag, true, true);   // Check if it's a hit
         // If it is not a hit, perform the miss operation
         if (!flag) {
-            System.out.println("READ " + tag);
             numRead++;
             numMiss++;
 
@@ -199,12 +180,6 @@ public class Cache {
         listLRU.add(wayNumber);
 
         LRU.put(setDecimal, listLRU);
-
-        /*
-        System.out.println();
-        System.out.println(listLRU);
-
-         */
 
         return wayNumber;
     }
