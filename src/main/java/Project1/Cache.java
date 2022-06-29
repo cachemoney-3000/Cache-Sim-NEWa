@@ -80,11 +80,12 @@ public class Cache {
 
                 // Only applies if it's a write-back
                 if(!isWriteThru) {
-                   if(isRead)
-                       block.setDirty(0);  // If the operation is read, set dirty to 0
-                   else
-                       block.setDirty(1); // If it's write, set dirty to 1
+                    if(isRead)
+                        block.setDirty(0);  // If the operation is read, set dirty to 0
+                    else
+                        block.setDirty(1); // If it's write, set dirty to 1
                 }
+
 
                 block.setValid(1); // Then set it to valid
                 // Update the hashmap
@@ -117,8 +118,6 @@ public class Cache {
                 block.setDirty(0);  // If the operation is read, set dirty to 0
             else
                 block.setDirty(1); // If it's write, set dirty to 1
-
-
         }
         // Different data in same index with dirty bit 1 (Write-back)
         else if (block.getValid() == 1 && block.getDirty() == 1 && !tagStored.equals(tag)) {
@@ -131,8 +130,6 @@ public class Cache {
             }
             else
                 block.setDirty(1); // If it's write, set dirty to 1
-
-
         }
 
 
